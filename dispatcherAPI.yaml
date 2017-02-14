@@ -1,0 +1,192 @@
+
+swagger: '2.0'
+
+info:
+  version: "2.0.0"
+  title:  Dispatcher API
+  description: |
+    High-level API for deploying/deploying composed services using Cloudify Manager.
+
+# Paths
+paths:
+  /:
+    get:
+      description: |
+        Get API version information, links to API operations, and location data
+        
+      responses:
+
+        200:
+          description: Success
+          schema:
+            title: DispatcherInfo
+            type: object
+            properties:
+              apiVersion:
+                type: string
+                description: |
+                  version of API supported by this server
+              serverVersion:
+                  type: string
+                  description: |
+                    version of software running on this server
+              links:
+                type: object
+                description: |
+                  Links to API resources
+                properties:
+                  dcaeServiceInstances:
+                    type: string
+                    description: |
+                      root of DCAE service instance resource tree
+                  status:
+                    type: string
+                    description: |
+                      link to server status information
+              locations:
+                type: object
+                description: |
+                  Information about DCAE locations known to this dispatcher
+  /events:
+    post:
+      description: |
+        Signal an event that triggers deployment or undeployment of a DCAE service
+        
+      consumes:
+        - application/json
+      produces:
+        - application/json
+        
+      parameters:
+        - name: dcae_event
+          in: body
+          schema:
+              $ref: "#/definitions/DCAEEvent"
+          required: true
+  
+      responses:
+    
+        202:
+          description: |
+            Success:  The content that was posted is valid, the dispatcher has
+              found the needed blueprint (for a deploy operation) or the existing deployment
+              (for an undeploy operation), and is initiating the necessary orchestration steps.
+          schema:
+            $ref: "#/definitions/DCAEEventResponse"
+            
+        400:
+          description: |
+            Bad request: See the message in the response for details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        415:
+          description: |
+            Bad request: The Content-Type header does not indicate that the content is
+            'application/json'
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        500:
+          description: |
+            Problem on the server side, possible with downstream systems.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+          
+definitions:
+
+  DCAEEvent:
+    description: |
+      Data describing an event that should trigger a deploy or undeploy operation for one 
+      or more DCAE services.
+   
+    type: object
+    required: [dcae_target_name, dcae_target_type, dcae_service_action, dcae_service_location, event]
+    
+    properties:
+      
+      dcae_target_name:
+        description: |
+          The name of the entity that's the target for monitoring by a DCAE service.  This uniquely identifies the monitoring target.   For 'undeploy' operations, this value will be used to select the specific DCAE service instance to be undeployed.
+        type: string
+
+      dcae_target_type:
+        description: |
+          The type of the entity that's the target for monitoring by a DCAE service.  In 1607, this field will have one of eight distinct values, based on which mobility VM is to
+            be monitored.  For 'deploy' operations, this value will be used to select the
+            service blueprint to deploy.
+        type: string
+
+      dcae_service_action:
+        description: |
+          Indicates whether the event requires a  DCAE service to be deployed or undeployed.
+          Valid values are 'deploy' and 'undeploy'.
+        type: string
+
+      dcae_service_location:
+        description: |
+          The location at which the DCAE service is to be deployed or from which it is to be
+          undeployed.  
+        type: string
+      
+      dcae_service_type:
+        description: |
+          Identifier for the service of which the target entity is a part.
+        type: string
+
+      event:
+        description: |
+          The original A&AI event object.  
+          The data included here is available for populating deployment-specific values in the
+          service blueprint.
+        type: object
+
+      aai_additional_info:
+        description: |
+          Additional information, not carried in the event, obtained from an A&AI query or set of queries.  Data in this object is available for populating deployment-specific values in the blueprint.
+        type: object
+  
+  DCAEEventResponse:
+    description: |
+      Response body for a POST to /events.
+      
+    type: object
+    required: [requestId, deploymentIds]
+    
+    properties:
+      
+      requestId:
+        description: |
+          A unique identifier assigned to the request.  Useful for tracing a request through
+          logs.
+        type: string
+        
+      deploymentIds:
+        description: |
+          An array of deploymentIds, one for each service being deployed in response to this
+          event.  A deploymentId uniquely identifies an attempt to deploy a service.
+        type: array
+        items: 
+          type: string
+               
+  DCAEErrorResponse:
+    description: |
+      Object reporting an error.
+    type:
+      object
+    required: [status]
+    
+    properties:
+      status:
+        description: HTTP status code for the response
+        type: integer
+        
+      message:
+        description: Human-readable description of the reason for the error
+        type: string
+        
+          
+        
+                    
+                    

@@ -1,0 +1,28 @@
+{
+  "appenders": 
+  [
+    {
+      "type": "dateFile",
+      "filename": "log/access-dispatcher.log",
+      "pattern": "-yyyy-MM-dd",
+      "alwaysIncludePattern": false,
+      "category": ["access"],
+      "layout" : {
+      		"type" : "pattern",
+        	"pattern" : "%d{ISO8601} %m"
+       }
+    },
+    {
+      "type": "categoryFilter",
+      "exclude": ["access"],
+      "appender": {
+        "type": "dateFile",
+        "filename": "log/dispatcher.log",
+        "pattern":"-yyyy-MM-dd",
+        "alwaysIncludePattern": false
+
+      }
+    }
+  ]
+}
+

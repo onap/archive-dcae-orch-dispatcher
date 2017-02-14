@@ -1,0 +1,11 @@
+{
+    "listenPort" : 8444,
+	"cloudify": {
+    	"url": "https://cm.example.com/api/v2",
+    	"user": "admin",
+    	"password": "admin"
+    },
+    "inventory" : {
+    	"url" : "http://inventory.example.com:8080"
+    }
+}
