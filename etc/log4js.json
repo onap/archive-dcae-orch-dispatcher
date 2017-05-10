@@ -1,28 +1,56 @@
 {
-  "appenders": 
-  [
-    {
-      "type": "dateFile",
-      "filename": "log/access-dispatcher.log",
-      "pattern": "-yyyy-MM-dd",
-      "alwaysIncludePattern": false,
-      "category": ["access"],
-      "layout" : {
-      		"type" : "pattern",
-        	"pattern" : "%d{ISO8601} %m"
-       }
-    },
-    {
-      "type": "categoryFilter",
-      "exclude": ["access"],
-      "appender": {
-        "type": "dateFile",
-        "filename": "log/dispatcher.log",
-        "pattern":"-yyyy-MM-dd",
-        "alwaysIncludePattern": false
+	"appenders": 
+	[
+		{
+			"type": "categoryFilter",
+			"exclude": 	["audit"],
 
-      }
-    }
-  ]
+			"appender": 
+			{
+				"type": "dateFile",
+				"filename": "log/dispatcher.log",
+				"pattern": "-yyyy-MM-dd",
+				"alwaysIncludePattern": false
+			}
+		},
+
+		{
+			"type": "logLevelFilter",
+			"level": "WARN",
+			"appender": 
+			{
+				"filename": "log/error.log",
+				"type": "file",
+				"maxLogSize": 10240000,
+				"backups" : 10,
+				"layout": 
+				{
+					"type": "messagePassThrough"
+				}
+			}
+		},
+		{
+			"type": "logLevelFilter",
+			"level": "DEBUG",
+			"maxLevel": "DEBUG",
+			"appender": 
+			{
+				"filename": "log/debug.log",
+				"type": "file",
+				"maxLogSize": 10240000,
+				"backups" : 10
+			}
+		},
+		{
+			"type": "file",
+			"filename": "log/audit.log",
+			"maxLogSize": 10240000,
+			"backups": 10,
+			"category": ["audit"],
+			"layout": 
+			{
+				"type": "messagePassThrough"
+			}
+		}
+	]
 }
-

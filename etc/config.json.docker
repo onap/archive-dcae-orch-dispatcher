@@ -1,0 +1,12 @@
+{
+    "foreground": true,
+    "logLevel" : "INFO",
+	"cloudify": {
+    	"url": "http://cm.example.com/api/v2.1",
+    	"user": "admin",
+    	"password": "admin"
+    },
+    "inventory" : {
+    	"url" : "http://inventory:8080"
+    }
+}

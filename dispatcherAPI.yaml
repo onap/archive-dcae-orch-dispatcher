@@ -2,7 +2,7 @@
 swagger: '2.0'
 
 info:
-  version: "2.0.0"
+  version: "3.0.0"
   title:  Dispatcher API
   description: |
     High-level API for deploying/deploying composed services using Cloudify Manager.
@@ -35,14 +35,14 @@ paths:
                 description: |
                   Links to API resources
                 properties:
-                  dcaeServiceInstances:
+                  info:
                     type: string
                     description: |
-                      root of DCAE service instance resource tree
-                  status:
+                      path for the server information endpoint
+                  events:
                     type: string
                     description: |
-                      link to server status information
+                      path for the events endpoint
               locations:
                 type: object
                 description: |
@@ -89,10 +89,238 @@ paths:
             
         500:
           description: |
-            Problem on the server side, possible with downstream systems.  See the message
+            Problem on the server side.  See the message
             in the response for more details.
           schema:
             $ref: "#/definitions/DCAEErrorResponse"
+            
+        502:
+          description: |
+            Error reported to the dispatcher by a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        504:
+          description: |
+            Error communicating with a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+
+  /dcae-deployments:
+    get:
+      description: |
+        List service deployments known to the orchestrator, optionally restricted to a single service type
+      
+      parameters:
+        - name: serviceTypeId
+          description: |
+            Service type identifier for the type whose deployments are to be listed
+          type: string
+          in: query
+          required: false
+        
+      responses:
+
+        200:
+          description: |
+            Success. (Note that if no matching deployments are found, the request is still a success; the
+            deployments array is empty in that case.)
+          schema: 
+            $ref: "#/definitions/DCAEDeploymentsListResponse"
+
+        500:
+          description: |
+            Problem on the server side.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"                    
+        502:
+          description: |
+            Error reported to the dispatcher by a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        504:
+          description: |
+            Error communicating with a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+      
+  /dcae-deployments/{deploymentId}:
+    put:
+      description: |
+        Request deployment of a DCAE service
+        
+      consumes:
+        - application/json
+      produces:
+        - application/json
+        
+      parameters:
+        - name: deploymentId
+          description: |
+            Unique deployment identifier assigned by the API client.
+          in: path
+          type: string
+          required: true
+    
+        - name: body
+          in: body
+          schema:
+              $ref: "#/definitions/DCAEDeploymentRequest"
+          required: true
+  
+      responses:
+    
+        202:
+          description: |
+            Success:  The content that was posted is valid, the dispatcher has
+              found the needed blueprint, created an instance of the topology in the orchestrator,
+              and started an installation workflow.
+          schema:
+            $ref: "#/definitions/DCAEDeploymentResponse"
+            
+        400:
+          description: |
+            Bad request: See the message in the response for details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        409: 
+          description: |
+            A service with the specified deployment Id already exists.  Using PUT to update the service is not a supported operation.
+          schema:
+             $ref: "#/definitions/DCAEErrorResponse"
+            
+        415:
+          description: |
+            Bad request: The Content-Type header does not indicate that the content is
+            'application/json'
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        500:
+          description: |
+            Problem on the server side.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+        
+        502:
+          description: |
+            Error reported to the dispatcher by a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        504:
+          description: |
+            Error communicating with a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse" 
+            
+    delete:
+      description: |
+        Uninstall the DCAE service and remove all associated data from the orchestrator.
+        
+      parameters:
+        - name: deploymentId
+          description: |
+            Deployment identifier for the service to be uninstalled.
+          in: path
+          type: string
+          required: true
+          
+      responses:
+    
+        202:
+          description: |
+            Success:  The dispatcher has initiated the uninstall operation.
+          schema:
+            $ref: "#/definitions/DCAEDeploymentResponse"
+            
+        400:
+          description: |
+            Bad request: See the message in the response for details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        500:
+          description: |
+            Problem on the server side.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"            
+
+        502:
+          description: |
+            Error reported to the dispatcher by a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        504:
+          description: |
+            Error communicating with a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+  /dcae-deployments/{deploymentId}/operation/{operationId}:
+    get:
+      description: |
+        Get status of a deployment operation
+      parameters:
+        - name: deploymentId
+          in: path
+          type: string
+          required: true
+        - name: operationId
+          in: path
+          type: string
+          required: true
+        
+      responses:
+
+        200:
+          description: Status information retrieved successfully
+          schema: 
+            $ref: "#/definitions/DCAEOperationStatusResponse"
+        
+        404: 
+          description: The operation information does not exist (possibly because the service has been uninstalled and deleted).
+          schema: 
+            $ref: "#/definitions/DCAEErrorResponse"
+        
+        500:
+          description: |
+            Problem on the server side.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse" 
+                    
+        502:
+          description: |
+            Error reported to the dispatcher by a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+            
+        504:
+          description: |
+            Error communicating with a downstream system.  See the message
+            in the response for more details.
+          schema:
+            $ref: "#/definitions/DCAEErrorResponse"
+
+
+            
           
 definitions:
 
@@ -127,14 +355,34 @@ definitions:
       dcae_service_location:
         description: |
           The location at which the DCAE service is to be deployed or from which it is to be
-          undeployed.  
+          undeployed.
         type: string
       
       dcae_service_type:
         description: |
           Identifier for the service of which the target entity is a part.
         type: string
+        
+      dcae_service-instance_persona-model-id:
+        description: |
+          ASDC identifier for the service.
+        type: string
 
+      dcae_service-instance_persona-model-version:
+        description: |
+          ASDC version for the service. (Currently ignored by the dispatcher.)
+        type: string
+        
+      dcae_generic-vnf_persona-model-id:
+        description: |
+          ASDC identifier for the resource.
+        type: string
+ 
+      dcae_generic-vnf_persona-model-version:
+        description: |
+          ASDC version for the resource. (Currently ignored by the dispatcher.)
+        type: string
+               
       event:
         description: |
           The original A&AI event object.  
@@ -169,7 +417,92 @@ definitions:
         type: array
         items: 
           type: string
-               
+          
+  DCAEDeploymentRequest:
+    description: |
+      Request for deploying a DCAE service.
+    type:
+      object
+    required: [serviceTypeId]
+    
+    properties:
+    
+      serviceTypeId:
+        description: |
+          The service type identifier (a unique ID assigned by DCAE inventory) for the service to be deployed.
+        type: string
+        
+      inputs:
+        description: |
+          Object containing inputs needed by the service blueprint to create an instance of the service.
+          Content of the object depends on the service being deployed.
+        type: object
+ 
+  DCAEDeploymentResponse:
+    description: |
+      Response body for a PUT or DELETE to /dcae-deployments/{deploymentId}
+    type: object
+    
+    required: [requestId, links]
+    
+    properties:
+      requestId: 
+        type: string
+        description: |
+          Unique identifier for the request
+      links:
+        description: |
+          Links that the API client can access.
+        type: object
+        properties:
+          self:
+            type: string
+            description: |
+              Link used to retrieve information about the service being deployed
+          status:
+            type: string
+            description:
+              Link used to retrieve information about the status of the installation workflow
+  
+  DCAEOperationStatusResponse:
+    description: |
+      Response body for a request for status of an installation or uninstallation operation.
+    type: object
+    
+    required: [requestId, operationType, status]
+    
+    properties:
+      requestId:
+        type: string
+        description: |
+          A unique identifier assigned to the request.  Useful for tracing a request through logs.  
+      operationType:
+        description: |
+          Type of operation being reported on. ("install" or "uninstall")
+        type: string
+      status:
+        description: |
+          Status of the installation or uninstallation operation.  Possible values are "processing",
+          "succeeded", and "failed"
+        type: string
+      error:
+        description: |
+          If status is "failed", this field will be present and contain additional information about the reason the operation failed.
+        type: string
+      links: 
+        description: |
+         If the operation succeeded, links that the client can follow to take further action.  Note that a successful "uninstall" operation removes the DCAE service instance completely, so there are no possible further actions, and no links.
+        type: object
+        properties:
+          self:
+            type: string
+            description: |
+              Link used to retrieve information about the service.  
+          uninstall:
+            type: string
+            description:
+              Link used to trigger an "uninstall" operation for the service.  (Use the DELETE method.)        
+        
   DCAEErrorResponse:
     description: |
       Object reporting an error.
@@ -185,7 +518,27 @@ definitions:
       message:
         description: Human-readable description of the reason for the error
         type: string
-        
+
+  DCAEDeploymentsListResponse: 
+    description: |
+      Object providing a list of deployments
+    type: object
+    required: [requestId, deployments]
+    
+    properties:
+      requestId:
+        type: string
+        description: |
+          Unique identifier for the request
+      deployments:
+        type: array
+        items:
+          type: object
+          properties:
+            href: 
+              type: string
+              description: |
+                  URL for the service deployment
           
         
                     

@@ -1,18 +1,16 @@
 {
   "name": "DCAE-Orch-Dispatcher",
-  "version": "2.0.0",
+  "version": "3.0.1",
   "description": "DCAE Orchestrator Dispatcher",
   "main": "dispatcher.js",
   "dependencies": {
+    "adm-zip": "^0.4.7",
     "body-parser": "^1.15.0",
     "daemon": "^1.1.0",
     "ejs": "^2.4.1",
     "express": "^4.13.4",
     "log4js": "^0.6.33",
-    "node-tar.gz": "^1.0.0",
-    "node-uuid": "^1.4.3",
-    "request": "^2.61.0",
-    "rimraf": "^2.4.2"
+    "node-uuid": "^1.4.3"
   },
   "devDependencies": {},
   "scripts": {
